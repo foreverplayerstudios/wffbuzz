@@ -135,6 +135,24 @@ export const Login = () => {
               </div>
             </div>
           </form>
+
+          {/* Advertisement */}
+          <div className="mt-8 flex justify-center">
+            <div id="frame" style={{width:'728px', height:'auto'}}>
+              <iframe
+                data-aa='2393203'
+                src='//ad.a-ads.com/2393203?size=728x90'
+                style={{width:'728px', height:'90px', border:'0px', padding:0, overflow:'hidden', backgroundColor: 'transparent'}}
+              />
+              <a
+                style={{display: 'block', textAlign: 'right', fontSize: '12px'}}
+                id="preview-link"
+                href="https://aads.com/campaigns/new/?source_id=2393203&source_type=ad_unit&partner=2393203"
+              >
+                Advertise here
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </>
