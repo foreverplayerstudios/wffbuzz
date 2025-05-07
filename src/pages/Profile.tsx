@@ -44,39 +44,46 @@ export const Profile = () => {
 
   // Load advertisement scripts
   useEffect(() => {
-    // Set atOptions directly on window object
-    window.atOptions = {
-      'key': '4ec5406b1f666315605bc42863bc2f96',
-      'format': 'iframe',
-      'height': 90,
-      'width': 728,
-      'params': {}
-    };
+    // First script: atOptions
+    const atOptionsScript = document.createElement('script');
+    atOptionsScript.id = 'ad-options-profile';
+    atOptionsScript.type = 'text/javascript';
+    atOptionsScript.text = `
+      atOptions = {
+        'key' : '4ec5406b1f666315605bc42863bc2f96',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
     
-    // Create the script element for the ad invocation
-    const adScript = document.createElement('script');
-    adScript.id = 'ad-script-profile'; // Add unique ID to prevent duplicates
-    adScript.type = 'text/javascript';
-    adScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
-    adScript.async = true;
+    // Second script: invoke.js
+    const adInvokeScript = document.createElement('script');
+    adInvokeScript.id = 'ad-invoke-profile';
+    adInvokeScript.type = 'text/javascript';
+    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
     
-    // Check if script already exists
-    if (!document.getElementById('ad-script-profile')) {
-      // Add script to the document
-      document.head.appendChild(adScript);
+    // Check if scripts already exist and add them if they don't
+    if (!document.getElementById('ad-options-profile')) {
+      document.head.appendChild(atOptionsScript);
+    }
+    
+    if (!document.getElementById('ad-invoke-profile')) {
+      document.head.appendChild(adInvokeScript);
     }
     
     // Clean up function
     return () => {
-      // Safe removal of script if it exists
-      const scriptToRemove = document.getElementById('ad-script-profile');
-      if (scriptToRemove && scriptToRemove.parentNode) {
-        scriptToRemove.parentNode.removeChild(scriptToRemove);
+      const optionsScript = document.getElementById('ad-options-profile');
+      const invokeScript = document.getElementById('ad-invoke-profile');
+      
+      if (optionsScript && optionsScript.parentNode) {
+        optionsScript.parentNode.removeChild(optionsScript);
       }
       
-      // Clean up window.atOptions
-      if (window.atOptions) {
-        delete window.atOptions;
+      if (invokeScript && invokeScript.parentNode) {
+        invokeScript.parentNode.removeChild(invokeScript);
       }
     };
   }, []);
