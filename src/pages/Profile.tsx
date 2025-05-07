@@ -42,10 +42,50 @@ export const Profile = () => {
     }
   }, [user]);
 
-  // Advertisement container setup
+  // Load advertisement scripts
   useEffect(() => {
-    // The ad scripts are now loaded globally from index.html
-    // This effect can be used for any additional ad-related setup if needed in the future
+    // First script: atOptions
+    const atOptionsScript = document.createElement('script');
+    atOptionsScript.id = 'ad-options-profile';
+    atOptionsScript.type = 'text/javascript';
+    atOptionsScript.text = `
+      atOptions = {
+        'key' : '4ec5406b1f666315605bc42863bc2f96',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
+    
+    // Second script: invoke.js
+    const adInvokeScript = document.createElement('script');
+    adInvokeScript.id = 'ad-invoke-profile';
+    adInvokeScript.type = 'text/javascript';
+    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
+    
+    // Check if scripts already exist and add them if they don't
+    if (!document.getElementById('ad-options-profile')) {
+      document.head.appendChild(atOptionsScript);
+    }
+    
+    if (!document.getElementById('ad-invoke-profile')) {
+      document.head.appendChild(adInvokeScript);
+    }
+    
+    // Clean up function
+    return () => {
+      const optionsScript = document.getElementById('ad-options-profile');
+      const invokeScript = document.getElementById('ad-invoke-profile');
+      
+      if (optionsScript && optionsScript.parentNode) {
+        optionsScript.parentNode.removeChild(optionsScript);
+      }
+      
+      if (invokeScript && invokeScript.parentNode) {
+        invokeScript.parentNode.removeChild(invokeScript);
+      }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
