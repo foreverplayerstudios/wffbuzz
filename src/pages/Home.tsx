@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { Film, Tv, TrendingUp, Star, Calendar, Play, Info, ChevronRight, Clapperboard } from 'lucide-react';
@@ -7,6 +7,8 @@ import MovieCard from '../components/MovieCard';
 import { SEO } from '../components/SEO';
 import { cn } from '../utils/cn';
 import { createSEOProps } from '../utils/seo-helper';
+import { HighPerformanceAd } from '../components/HighPerformanceAd';
+import { Movie } from '../types/tmdb';
 
 interface FeaturedBannerProps {
   items: any[];
@@ -217,8 +219,6 @@ const Category: React.FC<CategoryProps> = ({ title, icon: Icon, items, isLoading
 };
 
 export const Home = () => {
-  const adContainerRef = useRef<HTMLDivElement>(null);
-  
   const { data: trendingMovies, isLoading: isTrendingMoviesLoading } = useQuery(
     'trendingMovies',
     () => getTrending('movie'),
@@ -255,51 +255,6 @@ export const Home = () => {
     }
   );
 
-  // Load advertisement scripts
-  useEffect(() => {
-    // First script: atOptions
-    const atOptionsScript = document.createElement('script');
-    atOptionsScript.id = 'ad-options-home';
-    atOptionsScript.type = 'text/javascript';
-    atOptionsScript.text = `
-      atOptions = {
-        'key' : '4ec5406b1f666315605bc42863bc2f96',
-        'format' : 'iframe',
-        'height' : 90,
-        'width' : 728,
-        'params' : {}
-      };
-    `;
-    
-    // Second script: invoke.js
-    const adInvokeScript = document.createElement('script');
-    adInvokeScript.id = 'ad-invoke-home';
-    adInvokeScript.type = 'text/javascript';
-    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
-    
-    // Check if scripts already exist and add them if they don't
-    if (!document.getElementById('ad-options-home')) {
-      document.head.appendChild(atOptionsScript);
-    }
-    
-    if (!document.getElementById('ad-invoke-home')) {
-      document.head.appendChild(adInvokeScript);
-    }
-    
-    // Clean up function
-    return () => {
-      const optionsScript = document.getElementById('ad-options-home');
-      const invokeScript = document.getElementById('ad-invoke-home');
-      
-      if (optionsScript && optionsScript.parentNode) {
-        optionsScript.parentNode.removeChild(optionsScript);
-      }
-      
-      if (invokeScript && invokeScript.parentNode) {
-        invokeScript.parentNode.removeChild(invokeScript);
-      }
-    };
-  }, []);
 
   const currentUrl = window.location.origin;
 
@@ -341,7 +296,7 @@ export const Home = () => {
 
   // Create enhanced SEO props with trending titles for better indexing
   const seoDescription = trendingMovies?.length 
-    ? `Stream the latest movies and TV shows in HD quality on WatchFreeFlicks. Now trending: ${trendingMovies.slice(0, 3).map(m => m.title).join(', ')}. Watch your favorite content anytime, anywhere.`
+    ? `Stream the latest movies and TV shows in HD quality on WatchFreeFlicks. Now trending: ${trendingMovies.slice(0, 3).map((m: Movie) => m.title).join(', ')}. Watch your favorite content anytime, anywhere.`
     : "Stream the latest movies and TV shows in HD quality on WatchFreeFlicks. Watch your favorite content anytime, anywhere. Free streaming of popular movies and TV series.";
 
   const seoProps = createSEOProps({
@@ -396,7 +351,11 @@ export const Home = () => {
 
           {/* Advertisement */}
           <section className="mb-16 flex justify-center">
-            <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
+            <HighPerformanceAd
+              adKey="4ec5406b1f666315605bc42863bc2f96"
+              width={728}
+              height={90}
+            />
           </section>
 
           {/* Categories */}

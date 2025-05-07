@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { Calendar, Clock, Star, Award, Tv, Film, ChevronDown, Play, Info, Share2 } from 'lucide-react';
@@ -13,6 +13,39 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { GenreBadge } from '../components/GenreBadge';
 import { createSEOProps, formatMovieTitle } from '../utils/seo-helper';
+import { HighPerformanceAd } from '../components/HighPerformanceAd';
+import { Movie, TVShow, Genre, Season, Episode } from '../types/tmdb';
+
+// Define interfaces for missing types
+interface CastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+interface CrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
+}
+
+interface Credits {
+  cast: CastMember[];
+  crew: CrewMember[];
+}
+
+interface MovieDetails extends Movie {
+  credits?: Credits;
+}
+
+interface TVShowDetails extends TVShow {
+  credits?: Credits;
+}
+
+type MediaDetails = MovieDetails | TVShowDetails;
 
 export const Watch = () => {
   const { mediaType = 'movie', id } = useParams<{ mediaType: 'movie' | 'tv'; id: string }>();
@@ -20,7 +53,6 @@ export const Watch = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [showSeasons, setShowSeasons] = useState(false);
-  const adContainerRef = useRef<HTMLDivElement>(null);
 
   // Get last watched episode
   const { data: lastWatched } = useQuery(
@@ -49,7 +81,7 @@ export const Watch = () => {
   );
 
   // Get show details
-  const { data: details, isLoading: isDetailsLoading } = useQuery(
+  const { data: details, isLoading: isDetailsLoading } = useQuery<MediaDetails>(
     ['details', mediaType, id],
     () => getDetails(mediaType!, parseInt(id!)),
     {
@@ -83,51 +115,6 @@ export const Watch = () => {
     }
   }, [lastWatched, mediaType]);
 
-  // Load advertisement scripts
-  useEffect(() => {
-    // First script: atOptions
-    const atOptionsScript = document.createElement('script');
-    atOptionsScript.id = 'ad-options-watch';
-    atOptionsScript.type = 'text/javascript';
-    atOptionsScript.text = `
-      atOptions = {
-        'key' : '4ec5406b1f666315605bc42863bc2f96',
-        'format' : 'iframe',
-        'height' : 90,
-        'width' : 728,
-        'params' : {}
-      };
-    `;
-    
-    // Second script: invoke.js
-    const adInvokeScript = document.createElement('script');
-    adInvokeScript.id = 'ad-invoke-watch';
-    adInvokeScript.type = 'text/javascript';
-    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
-    
-    // Check if scripts already exist and add them if they don't
-    if (!document.getElementById('ad-options-watch')) {
-      document.head.appendChild(atOptionsScript);
-    }
-    
-    if (!document.getElementById('ad-invoke-watch')) {
-      document.head.appendChild(adInvokeScript);
-    }
-    
-    // Clean up function
-    return () => {
-      const optionsScript = document.getElementById('ad-options-watch');
-      const invokeScript = document.getElementById('ad-invoke-watch');
-      
-      if (optionsScript && optionsScript.parentNode) {
-        optionsScript.parentNode.removeChild(optionsScript);
-      }
-      
-      if (invokeScript && invokeScript.parentNode) {
-        invokeScript.parentNode.removeChild(invokeScript);
-      }
-    };
-  }, []);
 
   if (isDetailsLoading || !details) {
     return (
@@ -140,9 +127,13 @@ export const Watch = () => {
     );
   }
 
-  const title = 'title' in details ? details.title : details.name;
-  const releaseDate = 'release_date' in details ? details.release_date : details.first_air_date;
-  const runtime = 'runtime' in details ? details.runtime : details.episode_run_time?.[0];
+  // Type guards
+  const isMovie = (details: MediaDetails): details is MovieDetails => 'title' in details;
+  const isTVShow = (details: MediaDetails): details is TVShowDetails => 'name' in details;
+
+  const title = isMovie(details) ? details.title : details.name;
+  const releaseDate = isMovie(details) ? details.release_date : details.first_air_date;
+  const runtime = isMovie(details) ? details.runtime : details.episode_run_time?.[0];
 
   const handleShare = async () => {
     try {
@@ -177,9 +168,9 @@ export const Watch = () => {
     publishedAt: releaseDate,
     rating: details.vote_average,
     duration: runtime,
-    genres: details.genres?.map(g => g.name),
-    actors: details.credits?.cast?.slice(0, 5).map(actor => actor.name),
-    director: details.credits?.crew?.find(person => person.job === 'Director')?.name
+    genres: details.genres?.map((g: Genre) => g.name),
+    actors: details.credits?.cast?.slice(0, 5).map((actor: CastMember) => actor.name),
+    director: details.credits?.crew?.find((person: CrewMember) => person.job === 'Director')?.name
   });
 
   return (
@@ -253,7 +244,7 @@ export const Watch = () => {
 
                 {details.genres && (
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {details.genres.map((genre) => (
+                    {details.genres.map((genre: Genre) => (
                       <GenreBadge
                         key={genre.id}
                         id={genre.id}
@@ -281,7 +272,7 @@ export const Watch = () => {
                   />
                 </div>
 
-                {mediaType === 'tv' && details.seasons && (
+                {mediaType === 'tv' && isTVShow(details) && details.seasons && (
                   <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-200 to-white">Episodes</h2>
@@ -298,7 +289,7 @@ export const Watch = () => {
                         </button>
                         {showSeasons && (
                           <div className="absolute top-full right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-xl border border-white/[0.05] py-1 z-50">
-                            {details.seasons.map((season) => (
+                            {isTVShow(details) && details.seasons.map((season: Season) => (
                               <button
                                 key={season.season_number}
                                 onClick={() => handleEpisodeSelect(season.season_number, 1)}
@@ -320,7 +311,7 @@ export const Watch = () => {
                       </div>
                     </div>
                     <div className="grid gap-4">
-                      {seasonDetails?.episodes.map((episode) => (
+                      {seasonDetails?.episodes.map((episode: Episode) => (
                         <button
                           key={episode.episode_number}
                           onClick={() => handleEpisodeSelect(selectedSeason, episode.episode_number)}
@@ -373,15 +364,19 @@ export const Watch = () => {
                 </div>
 
                 {/* Advertisement */}
-                <div className="mb-12 flex justify-center">
-                  <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
+                <div className="mb-12">
+                  <HighPerformanceAd
+                    adKey="4ec5406b1f666315605bc42863bc2f96"
+                    width={728}
+                    height={90}
+                  />
                 </div>
 
                 {recommendations && recommendations.length > 0 && (
                   <div>
                     <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-200 to-white">You May Also Like</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {recommendations.slice(0, 8).map((item) => (
+                      {recommendations.slice(0, 8).map((item: Movie | TVShow) => (
                         <MovieCard
                           key={item.id}
                           item={item}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { SEO } from '../components/SEO';
 import { AvatarSelector, DEFAULT_AVATAR } from '../components/AvatarSelector';
 import toast from 'react-hot-toast';
+import { HighPerformanceAd } from '../components/HighPerformanceAd';
 
 export const Profile = () => {
   const { user, signOut, updateProfile } = useAuth();
@@ -14,7 +15,6 @@ export const Profile = () => {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const navigate = useNavigate();
-  const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -42,51 +42,6 @@ export const Profile = () => {
     }
   }, [user]);
 
-  // Load advertisement scripts
-  useEffect(() => {
-    // First script: atOptions
-    const atOptionsScript = document.createElement('script');
-    atOptionsScript.id = 'ad-options-profile';
-    atOptionsScript.type = 'text/javascript';
-    atOptionsScript.text = `
-      atOptions = {
-        'key' : '4ec5406b1f666315605bc42863bc2f96',
-        'format' : 'iframe',
-        'height' : 90,
-        'width' : 728,
-        'params' : {}
-      };
-    `;
-    
-    // Second script: invoke.js
-    const adInvokeScript = document.createElement('script');
-    adInvokeScript.id = 'ad-invoke-profile';
-    adInvokeScript.type = 'text/javascript';
-    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
-    
-    // Check if scripts already exist and add them if they don't
-    if (!document.getElementById('ad-options-profile')) {
-      document.head.appendChild(atOptionsScript);
-    }
-    
-    if (!document.getElementById('ad-invoke-profile')) {
-      document.head.appendChild(adInvokeScript);
-    }
-    
-    // Clean up function
-    return () => {
-      const optionsScript = document.getElementById('ad-options-profile');
-      const invokeScript = document.getElementById('ad-invoke-profile');
-      
-      if (optionsScript && optionsScript.parentNode) {
-        optionsScript.parentNode.removeChild(optionsScript);
-      }
-      
-      if (invokeScript && invokeScript.parentNode) {
-        invokeScript.parentNode.removeChild(invokeScript);
-      }
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,7 +151,11 @@ export const Profile = () => {
 
           {/* Advertisement */}
           <div className="mt-8 flex justify-center">
-            <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
+            <HighPerformanceAd
+              adKey="4ec5406b1f666315605bc42863bc2f96"
+              width={728}
+              height={90}
+            />
           </div>
         </div>
       </div>
