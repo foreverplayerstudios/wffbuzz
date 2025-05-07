@@ -328,18 +328,18 @@ export const Watch = () => {
                 {/* Advertisement */}
                 <div className="mb-12 flex justify-center">
                   <div id="frame" style={{width:'728px', height:'auto'}}>
-                    <iframe
-                      data-aa='2393203'
-                      src='//ad.a-ads.com/2393203?size=728x90'
-                      style={{width:'728px', height:'90px', border:'0px', padding:0, overflow:'hidden', backgroundColor: 'transparent'}}
-                    />
-                    <a
-                      style={{display: 'block', textAlign: 'right', fontSize: '12px'}}
-                      id="preview-link"
-                      href="https://aads.com/campaigns/new/?source_id=2393203&source_type=ad_unit&partner=2393203"
-                    >
-                      Advertise here
-                    </a>
+                    <script type="text/javascript">
+                      {`
+                      atOptions = {
+                        'key' : '4ec5406b1f666315605bc42863bc2f96',
+                        'format' : 'iframe',
+                        'height' : 90,
+                        'width' : 728,
+                        'params' : {}
+                      };
+                      `}
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js"></script>
                   </div>
                 </div>
 
