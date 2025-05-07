@@ -85,34 +85,39 @@ export const Watch = () => {
 
   // Load advertisement scripts
   useEffect(() => {
-    // Create the first script element for atOptions
-    const atOptionsScript = document.createElement('script');
-    atOptionsScript.type = 'text/javascript';
-    atOptionsScript.text = `
-      window.atOptions = {
-        'key' : '4ec5406b1f666315605bc42863bc2f96',
-        'format' : 'iframe',
-        'height' : 90,
-        'width' : 728,
-        'params' : {}
-      };
-    `;
+    // Set atOptions directly on window object
+    window.atOptions = {
+      'key': '4ec5406b1f666315605bc42863bc2f96',
+      'format': 'iframe',
+      'height': 90,
+      'width': 728,
+      'params': {}
+    };
     
-    // Create the second script element for the ad invocation
+    // Create the script element for the ad invocation
     const adScript = document.createElement('script');
+    adScript.id = 'ad-script-watch'; // Add unique ID to prevent duplicates
     adScript.type = 'text/javascript';
     adScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
     adScript.async = true;
     
-    // Add scripts to the document
-    document.head.appendChild(atOptionsScript);
-    document.head.appendChild(adScript);
+    // Check if script already exists
+    if (!document.getElementById('ad-script-watch')) {
+      // Add script to the document
+      document.head.appendChild(adScript);
+    }
     
-    // Clean up function to remove scripts when component unmounts
+    // Clean up function
     return () => {
-      document.head.removeChild(atOptionsScript);
-      if (document.head.contains(adScript)) {
-        document.head.removeChild(adScript);
+      // Safe removal of script if it exists
+      const scriptToRemove = document.getElementById('ad-script-watch');
+      if (scriptToRemove && scriptToRemove.parentNode) {
+        scriptToRemove.parentNode.removeChild(scriptToRemove);
+      }
+      
+      // Clean up window.atOptions
+      if (window.atOptions) {
+        delete window.atOptions;
       }
     };
   }, []);
