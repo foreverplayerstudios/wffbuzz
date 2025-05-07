@@ -83,50 +83,10 @@ export const Watch = () => {
     }
   }, [lastWatched, mediaType]);
 
-  // Load advertisement scripts
+  // Advertisement container setup
   useEffect(() => {
-    // First script: atOptions
-    const atOptionsScript = document.createElement('script');
-    atOptionsScript.id = 'ad-options-watch';
-    atOptionsScript.type = 'text/javascript';
-    atOptionsScript.text = `
-      atOptions = {
-        'key' : '4ec5406b1f666315605bc42863bc2f96',
-        'format' : 'iframe',
-        'height' : 90,
-        'width' : 728,
-        'params' : {}
-      };
-    `;
-    
-    // Second script: invoke.js
-    const adInvokeScript = document.createElement('script');
-    adInvokeScript.id = 'ad-invoke-watch';
-    adInvokeScript.type = 'text/javascript';
-    adInvokeScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
-    
-    // Check if scripts already exist and add them if they don't
-    if (!document.getElementById('ad-options-watch')) {
-      document.head.appendChild(atOptionsScript);
-    }
-    
-    if (!document.getElementById('ad-invoke-watch')) {
-      document.head.appendChild(adInvokeScript);
-    }
-    
-    // Clean up function
-    return () => {
-      const optionsScript = document.getElementById('ad-options-watch');
-      const invokeScript = document.getElementById('ad-invoke-watch');
-      
-      if (optionsScript && optionsScript.parentNode) {
-        optionsScript.parentNode.removeChild(optionsScript);
-      }
-      
-      if (invokeScript && invokeScript.parentNode) {
-        invokeScript.parentNode.removeChild(invokeScript);
-      }
-    };
+    // The ad scripts are now loaded globally from index.html
+    // This effect can be used for any additional ad-related setup if needed in the future
   }, []);
 
   if (isDetailsLoading || !details) {
