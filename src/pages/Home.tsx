@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { Film, Tv, TrendingUp, Star, Calendar, Play, Info, ChevronRight, Clapperboard } from 'lucide-react';
@@ -217,8 +217,10 @@ const Category: React.FC<CategoryProps> = ({ title, icon: Icon, items, isLoading
 };
 
 export const Home = () => {
+  const adContainerRef = useRef<HTMLDivElement>(null);
+  
   const { data: trendingMovies, isLoading: isTrendingMoviesLoading } = useQuery(
-    'trendingMovies', 
+    'trendingMovies',
     () => getTrending('movie'),
     {
       staleTime: 5 * 60 * 1000,
@@ -252,6 +254,40 @@ export const Home = () => {
       refetchOnWindowFocus: false,
     }
   );
+
+  // Load advertisement scripts
+  useEffect(() => {
+    // Create the first script element for atOptions
+    const atOptionsScript = document.createElement('script');
+    atOptionsScript.type = 'text/javascript';
+    atOptionsScript.text = `
+      window.atOptions = {
+        'key' : '4ec5406b1f666315605bc42863bc2f96',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
+    
+    // Create the second script element for the ad invocation
+    const adScript = document.createElement('script');
+    adScript.type = 'text/javascript';
+    adScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
+    adScript.async = true;
+    
+    // Add scripts to the document
+    document.head.appendChild(atOptionsScript);
+    document.head.appendChild(adScript);
+    
+    // Clean up function to remove scripts when component unmounts
+    return () => {
+      document.head.removeChild(atOptionsScript);
+      if (document.head.contains(adScript)) {
+        document.head.removeChild(adScript);
+      }
+    };
+  }, []);
 
   const currentUrl = window.location.origin;
 
@@ -348,20 +384,7 @@ export const Home = () => {
 
           {/* Advertisement */}
           <section className="mb-16 flex justify-center">
-            <div id="frame" style={{width:'728px', height:'auto'}}>
-              <script type="text/javascript">
-                {`
-                atOptions = {
-                  'key' : '4ec5406b1f666315605bc42863bc2f96',
-                  'format' : 'iframe',
-                  'height' : 90,
-                  'width' : 728,
-                  'params' : {}
-                };
-                `}
-              </script>
-              <script type="text/javascript" src="//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js"></script>
-            </div>
+            <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
           </section>
 
           {/* Categories */}

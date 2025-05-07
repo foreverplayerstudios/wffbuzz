@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { Calendar, Clock, Star, Award, Tv, Film, ChevronDown, Play, Info, Share2 } from 'lucide-react';
@@ -20,6 +20,7 @@ export const Watch = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [showSeasons, setShowSeasons] = useState(false);
+  const adContainerRef = useRef<HTMLDivElement>(null);
 
   // Get last watched episode
   const { data: lastWatched } = useQuery(
@@ -81,6 +82,40 @@ export const Watch = () => {
       setSelectedEpisode(lastWatched.episode_number || 1);
     }
   }, [lastWatched, mediaType]);
+
+  // Load advertisement scripts
+  useEffect(() => {
+    // Create the first script element for atOptions
+    const atOptionsScript = document.createElement('script');
+    atOptionsScript.type = 'text/javascript';
+    atOptionsScript.text = `
+      window.atOptions = {
+        'key' : '4ec5406b1f666315605bc42863bc2f96',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
+    
+    // Create the second script element for the ad invocation
+    const adScript = document.createElement('script');
+    adScript.type = 'text/javascript';
+    adScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
+    adScript.async = true;
+    
+    // Add scripts to the document
+    document.head.appendChild(atOptionsScript);
+    document.head.appendChild(adScript);
+    
+    // Clean up function to remove scripts when component unmounts
+    return () => {
+      document.head.removeChild(atOptionsScript);
+      if (document.head.contains(adScript)) {
+        document.head.removeChild(adScript);
+      }
+    };
+  }, []);
 
   if (isDetailsLoading || !details) {
     return (
@@ -327,20 +362,7 @@ export const Watch = () => {
 
                 {/* Advertisement */}
                 <div className="mb-12 flex justify-center">
-                  <div id="frame" style={{width:'728px', height:'auto'}}>
-                    <script type="text/javascript">
-                      {`
-                      atOptions = {
-                        'key' : '4ec5406b1f666315605bc42863bc2f96',
-                        'format' : 'iframe',
-                        'height' : 90,
-                        'width' : 728,
-                        'params' : {}
-                      };
-                      `}
-                    </script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js"></script>
-                  </div>
+                  <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
                 </div>
 
                 {recommendations && recommendations.length > 0 && (

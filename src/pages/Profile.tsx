@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ export const Profile = () => {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const navigate = useNavigate();
+  const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -40,6 +41,40 @@ export const Profile = () => {
       getProfile();
     }
   }, [user]);
+
+  // Load advertisement scripts
+  useEffect(() => {
+    // Create the first script element for atOptions
+    const atOptionsScript = document.createElement('script');
+    atOptionsScript.type = 'text/javascript';
+    atOptionsScript.text = `
+      window.atOptions = {
+        'key' : '4ec5406b1f666315605bc42863bc2f96',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
+    
+    // Create the second script element for the ad invocation
+    const adScript = document.createElement('script');
+    adScript.type = 'text/javascript';
+    adScript.src = '//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js';
+    adScript.async = true;
+    
+    // Add scripts to the document
+    document.head.appendChild(atOptionsScript);
+    document.head.appendChild(adScript);
+    
+    // Clean up function to remove scripts when component unmounts
+    return () => {
+      document.head.removeChild(atOptionsScript);
+      if (document.head.contains(adScript)) {
+        document.head.removeChild(adScript);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,20 +184,7 @@ export const Profile = () => {
 
           {/* Advertisement */}
           <div className="mt-8 flex justify-center">
-            <div id="frame" style={{width:'728px', height:'auto'}}>
-              <script type="text/javascript">
-                {`
-                atOptions = {
-                  'key' : '4ec5406b1f666315605bc42863bc2f96',
-                  'format' : 'iframe',
-                  'height' : 90,
-                  'width' : 728,
-                  'params' : {}
-                };
-                `}
-              </script>
-              <script type="text/javascript" src="//www.highperformanceformat.com/4ec5406b1f666315605bc42863bc2f96/invoke.js"></script>
-            </div>
+            <div id="ad-container" ref={adContainerRef} style={{width:'728px', height:'90px'}}></div>
           </div>
         </div>
       </div>
